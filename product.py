@@ -2,6 +2,7 @@ import csv
 import json
 import os
 import time
+import logging
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select
@@ -11,17 +12,22 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException
 from webdriver_manager.chrome import ChromeDriverManager
+
+# Configure logging
+logging.basicConfig(filename='crawler.log', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
 class RCKongenCrawler:
     def __init__(self):
         options = Options()
         # ****************** Use this for server hosting ***********************
-        options.add_argument("--headless") 
-        options.add_argument("--disable-gpu")
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
+        # options.add_argument("--headless") 
+        # options.add_argument("--disable-gpu")
+        # options.add_argument("--no-sandbox")
+        # options.add_argument("--disable-dev-shm-usage")
         # **********************************************************************
         
-        self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()),options=options)
+        logging.info("Initializing Chrome WebDriver")
+        self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
         
         # self.driver = webdriver.Chrome(options=options)
         self.driver.set_window_size(1920, 1080)
@@ -31,6 +37,7 @@ class RCKongenCrawler:
 
     def load_cookies(self, filename):
         if os.path.exists(filename):
+            logging.info(f"Loading cookies from {filename}")
             with open(filename, 'r') as file:
                 cookies = json.load(file)
                 self.driver.get("https://rckongen.dk/en/")
@@ -38,8 +45,10 @@ class RCKongenCrawler:
                     self.driver.add_cookie(cookie)
                 self.driver.refresh()
                 time.sleep(5)
+                logging.info("Cookies loaded and browser refreshed")
 
     def crawl(self, option):
+        logging.info(f"Starting crawl with option {option}")
         self.load_cookies('cookies.json')
         
         if option == 1:
@@ -47,12 +56,15 @@ class RCKongenCrawler:
         elif option == 2:
             self.get_product_details_from_links()
         else:
+            logging.error("Invalid option provided.")
             print("Invalid option provided.")
 
     def get_all_product_links(self):
+        logging.info("Getting all product links")
         self.navigate_to_category_and_select_option()
 
     def get_product_details_from_links(self):
+        logging.info("Getting product details from links")
         product_links = self.read_product_links_from_csv('product_links.csv')
         processed_links = set()  # Set to keep track of processed links
 
@@ -71,69 +83,64 @@ class RCKongenCrawler:
                             writer.writerow({'Href': remaining_link})
 
             except Exception as e:
-                print(f"Error processing link {link}: {e}")
+                logging.error(f"Error processing link {link}: {e}")
                 
     def crawl_pages(self):
         try:
+            logging.info("Attempting to navigate to the next page")
             pagination = self.driver.find_element(By.CSS_SELECTOR, 'div.pagination')
             next_button = pagination.find_element(By.CLASS_NAME, 'pagination__next')
 
             if next_button:
-                print(f"Navigating to next page")
+                logging.info("Navigating to next page")
                 next_button.click()
                 time.sleep(4)
                 return True
             else:
-                print("No more pages to navigate")
+                logging.info("No more pages to navigate")
                 return False
                 
         except NoSuchElementException:
-            print("Pagination not found or no more pages to navigate")
+            logging.warning("Pagination not found or no more pages to navigate")
             return False
             
         except Exception as e:
-            print(f"Error navigating pages")
+            logging.error(f"Error navigating pages: {e}")
             return False
             
     def navigate_to_category_and_select_option(self):
+        logging.info("Navigating to category and selecting options")
         try:
             option_names = self.read_options_from_csv('category_options.csv')
-    
+            
             for option_name in option_names:
                 try:
-                    # Wait for dropdown to be visible
-                    dropdown = WebDriverWait(self.driver, 10).until(
-                        EC.visibility_of_element_located((By.XPATH, '//select[@id="search-product-type"]'))
-                    )
+                    logging.info(f"Selecting option '{option_name}'")
+                    dropdown = self.driver.find_element(By.XPATH, '//select[@id="search-product-type"]')
                     select = Select(dropdown)
                     
-                    # Select the option from the dropdown
                     select.select_by_visible_text(option_name)
-                    
-                    # Wait for the search button to be clickable and then click it
-                    search_button = WebDriverWait(self.driver, 10).until(
-                        EC.element_to_be_clickable((By.XPATH, '//button[@class="search-bar__submit"]'))
-                    )
+                    time.sleep(2) 
+                    search_button = self.driver.find_element(By.XPATH, '//button[@class="search-bar__submit"]')
                     search_button.click()
-    
-                    # Wait for results to load
-                    WebDriverWait(self.driver, 10).until(
-                        EC.presence_of_element_located((By.XPATH, '//some-result-element'))
-                    )
-                    
+                    time.sleep(5)
                     while True:
                         self.crawl_and_extract_products()
-                        has_next = self.crawl_pages()
-                        if not has_next:
+                        next = self.crawl_pages()
+                        if not next:
                             break
-                
+                        
                 except NoSuchElementException as e:
-                    print(f"Error selecting option '{option_name}': {e}")
-    
-        except Exception as e:
-            print(f"An error occurred: {e}")
+                    logging.error(f"Error selecting option '{option_name}': {e}")
+            
+            # Optionally save the list of option names to CSV again
+            # self.save_options_to_csv(option_names, 'category_options.csv')
+            
+        except NoSuchElementException as e:
+            logging.error(f"Error: {e}")
     
     def crawl_and_extract_products(self):
+        logging.info("Crawling and extracting product data")
         try:
             product_items = self.driver.find_elements(By.CSS_SELECTOR, 'div.product-item')
 
@@ -148,12 +155,10 @@ class RCKongenCrawler:
             self.save_to_csv(data, 'product_links.csv')
 
         except NoSuchElementException as e:
-            print(f"Error: {e}")
+            logging.error(f"Error: {e}")
 
-# get product details function***************************
-# *********************************************************************************************
-# *******************************************************
     def extract_product_details(self, link):
+        logging.info(f"Extracting product details from {link}")
         try:
             self.driver.get(link)
             
@@ -172,13 +177,7 @@ class RCKongenCrawler:
             product_price_element = self.driver.find_element(By.CSS_SELECTOR, 'span.price')
             product_stock = self.driver.find_element(By.CSS_SELECTOR, 'div.product-form__info-item span.inventory').text.strip()
             product_price = product_price_element.text.strip().replace('\n', ' ')
-            # Print or process the extracted details
-            # print(f"Product Title: {product_title}")
-            # print(f"SKU Name: {sku_name}")
-            # print(f"Product Brand: {product_brand}")
-            # print(f"Product Price: {product_price}")
-            # print(f"Product Stock: {product_stock}")
-            # print("")
+            
             if product_stock == 'In stock':
                 product_stock_status = 'Yes'
             else:
@@ -196,12 +195,12 @@ class RCKongenCrawler:
             # Save data to CSV file
             self.product_detail_save_to_csv(data, 'product_details.csv')
             
-            
         except NoSuchElementException as e:
-            print(f"Error extracting product details from {link}: {e}")
+            logging.error(f"Error extracting product details from {link}: {e}")
             self.save_error_to_csv(link, str(e))
             
     def save_error_to_csv(self, link, error_message):
+        logging.info(f"Saving error details for {link}")
         try:
             with open('error_log.csv', 'a', newline='', encoding='utf-8') as error_file:
                 fieldnames = ['Link', 'Error Message']
@@ -214,11 +213,13 @@ class RCKongenCrawler:
                 # Write error details to CSV
                 writer.writerow({'Link': link, 'Error Message': error_message})
 
-            print(f"Error details saved to error_log.csv")
+            logging.info(f"Error details saved to error_log.csv")
 
         except IOError as e:
-            print(f"Error saving error details to error_log.csv: {e}")        
+            logging.error(f"Error saving error details to error_log.csv: {e}")        
+
     def product_detail_save_to_csv(self, data, filename):
+        logging.info(f"Saving product details to {filename}")
         try:
             with open(filename, 'a', newline='', encoding='utf-8') as csvfile:
                 fieldnames = ['Product Title', 'Product Brand', 'SKU Name', 'Product Price', 'Product Stock', 'Product Stock Status','Product Link']
@@ -231,12 +232,13 @@ class RCKongenCrawler:
                 # Write data to CSV
                 writer.writerow(data)
 
-            print(f"Data saved to {filename}")
+            logging.info(f"Data saved to {filename}")
 
         except IOError as e:
-            print(f"Error saving data to {filename}: {e}")        
+            logging.error(f"Error saving data to {filename}: {e}")        
 
     def save_to_csv(self, data, filename):
+        logging.info(f"Saving links to {filename}")
         try:
             with open(filename, 'a', newline='', encoding='utf-8') as csvfile:
                 fieldnames = ['Href']
@@ -253,13 +255,14 @@ class RCKongenCrawler:
                 for row in data:
                     writer.writerow(row)
 
-            print(f"Data saved to {filename}")
+            logging.info(f"Data saved to {filename}")
 
         except IOError:
-            print(f"Error: Could not write to {filename}")
+            logging.error(f"Error: Could not write to {filename}")
             
     def read_options_from_csv(self, filename):
         options = []
+        logging.info(f"Reading options from {filename}")
         try:
             with open(filename, 'r', newline='', encoding='utf-8') as csvfile:
                 reader = csv.reader(csvfile)
@@ -267,35 +270,38 @@ class RCKongenCrawler:
                 for row in reader:
                     options.append(row[0].strip())
         except IOError:
-            print(f"Error: Could not read from {filename}")
+            logging.error(f"Error: Could not read from {filename}")
         
         return options
 
     def read_product_links_from_csv(self, filename):
         links = []
+        logging.info(f"Reading product links from {filename}")
         try:
             with open(filename, 'r', newline='', encoding='utf-8') as csvfile:
                 reader = csv.DictReader(csvfile)
                 for row in reader:
                     links.append(row['Href'].strip())
         except IOError:
-            print(f"Error: Could not read from {filename}")
+            logging.error(f"Error: Could not read from {filename}")
         
         return links
 
     def save_options_to_csv(self, options, filename):
+        logging.info(f"Saving options to {filename}")
         try:
             with open(filename, 'w', newline='', encoding='utf-8') as csvfile:
                 writer = csv.writer(csvfile)
                 writer.writerow(['Option Name'])
                 for option in options:
                     writer.writerow([option])
-            print(f"Options saved to {filename}")
+            logging.info(f"Options saved to {filename}")
             
         except IOError:
-            print(f"Error: Could not write to {filename}")
+            logging.error(f"Error: Could not write to {filename}")
 
     def close(self):
+        logging.info("Closing WebDriver")
         self.driver.quit()
 
 if __name__ == "__main__":
