@@ -44,7 +44,7 @@ class RCKongenCrawler:
                 for cookie in cookies:
                     self.driver.add_cookie(cookie)
                 self.driver.refresh()
-                time.sleep(5)
+                time.sleep(30)
                 logging.info("Cookies loaded and browser refreshed")
 
     def crawl(self, option):
