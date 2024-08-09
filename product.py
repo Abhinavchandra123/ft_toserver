@@ -98,31 +98,40 @@ class RCKongenCrawler:
     def navigate_to_category_and_select_option(self):
         try:
             option_names = self.read_options_from_csv('category_options.csv')
-            
+    
             for option_name in option_names:
-                dropdown = self.driver.find_element(By.XPATH, '//select[@id="search-product-type"]')
-                select = Select(dropdown)
-                
                 try:
+                    # Wait for dropdown to be visible
+                    dropdown = WebDriverWait(self.driver, 10).until(
+                        EC.visibility_of_element_located((By.XPATH, '//select[@id="search-product-type"]'))
+                    )
+                    select = Select(dropdown)
+                    
+                    # Select the option from the dropdown
                     select.select_by_visible_text(option_name)
-                    time.sleep(2) 
-                    search_button = self.driver.find_element(By.XPATH, '//button[@class="search-bar__submit"]')
+                    
+                    # Wait for the search button to be clickable and then click it
+                    search_button = WebDriverWait(self.driver, 10).until(
+                        EC.element_to_be_clickable((By.XPATH, '//button[@class="search-bar__submit"]'))
+                    )
                     search_button.click()
-                    time.sleep(5)
+    
+                    # Wait for results to load
+                    WebDriverWait(self.driver, 10).until(
+                        EC.presence_of_element_located((By.XPATH, '//some-result-element'))
+                    )
+                    
                     while True:
                         self.crawl_and_extract_products()
-                        next=self.crawl_pages()
-                        if next == False:
+                        has_next = self.crawl_pages()
+                        if not has_next:
                             break
-                        
+                
                 except NoSuchElementException as e:
                     print(f"Error selecting option '{option_name}': {e}")
-            
-            # Optionally save the list of option names to CSV again
-            # self.save_options_to_csv(option_names, 'category_options.csv')
-            
-        except NoSuchElementException as e:
-            print(f"Error: {e}")
+    
+        except Exception as e:
+            print(f"An error occurred: {e}")
     
     def crawl_and_extract_products(self):
         try:
