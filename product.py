@@ -63,13 +63,13 @@ class RCKongenCrawler:
         logging.info(f"Starting crawl with option {option}")
         self.load_cookies('cookies.json')
         
-        if option == 1:
-            self.get_all_product_links()
-        elif option == 2:
-            self.get_product_details_from_links()
-        else:
-            logging.error("Invalid option provided.")
-            print("Invalid option provided.")
+        # if option == 1:
+        #     self.get_all_product_links()
+        # elif option == 2:
+        #     self.get_product_details_from_links()
+        # else:
+        #     logging.error("Invalid option provided.")
+        #     print("Invalid option provided.")
 
     def get_all_product_links(self):
         logging.info("Getting all product links")
