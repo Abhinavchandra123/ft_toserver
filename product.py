@@ -162,7 +162,7 @@ class RCKongenCrawler:
         logging.info(f"Extracting product details from {link}")
         try:
             self.driver.get(link)
-            
+            time.sleep(5)
             # Extract product details
             product_title = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'h1.product-meta__title'))).text.strip()
             try:
