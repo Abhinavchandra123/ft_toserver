@@ -20,10 +20,11 @@ class RCKongenCrawler:
     def __init__(self):
         options = Options()
         # ****************** Use this for server hosting ***********************
-        options.add_argument("--headless") 
-        options.add_argument("--disable-gpu")
-        options.add_argument("--no-sandbox")
-        options.add_argument("--disable-dev-shm-usage")
+        options.add_argument('--headless')
+        options.add_argument('--no-sandbox')
+        options.add_argument('--disable-dev-shm-usage')
+        options.add_argument('--disable-gpu')
+        options.add_argument('--remote-debugging-port=9222')
         # **********************************************************************
         
         logging.info("Initializing Chrome WebDriver")
@@ -71,7 +72,10 @@ class RCKongenCrawler:
 
         for link in product_links:
             try:
-                self.extract_product_details(link)
+                try:
+                    self.extract_product_details(link)
+                except Exception as e:
+                    logging.error(f"Error extracting product details {link}: {e}")
                 processed_links.add(link)  # Add processed link to the set
 
                 # Write the remaining links back to the CSV, excluding processed links
