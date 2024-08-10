@@ -45,7 +45,19 @@ class RCKongenCrawler:
                     self.driver.add_cookie(cookie)
                 self.driver.refresh()
                 time.sleep(30)
-                logging.info("Cookies loaded and browser refreshed")
+    
+                # Get and log the page source
+                page_source = self.driver.page_source
+                logging.info("Page source after refresh:")
+                logging.info(page_source[:5000])  # Log the first 5000 characters to avoid logging too much data
+    
+                # Optionally, if you want to print specific elements, you can do so here
+                # Example: print the title of the page
+                page_title = self.driver.title
+                logging.info(f"Page title after refresh: {page_title}")
+    
+                # Example: print the first 5000 characters of page content
+                logging.info(f"First 5000 characters of page content: {page_source[:5000]}")
 
     def crawl(self, option):
         logging.info(f"Starting crawl with option {option}")
