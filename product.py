@@ -41,35 +41,24 @@ class RCKongenCrawler:
             with open(filename, 'r') as file:
                 cookies = json.load(file)
                 self.driver.get("https://rckongen.dk/en/")
+                
                 for cookie in cookies:
                     self.driver.add_cookie(cookie)
                 self.driver.refresh()
-                time.sleep(30)
-    
-                # Get and log the page source
-                page_source = self.driver.page_source
-                logging.info("Page source after refresh:")
-                logging.info(page_source[:5000])  # Log the first 5000 characters to avoid logging too much data
-    
-                # Optionally, if you want to print specific elements, you can do so here
-                # Example: print the title of the page
-                page_title = self.driver.title
-                logging.info(f"Page title after refresh: {page_title}")
-    
-                # Example: print the first 5000 characters of page content
-                logging.info(f"First 5000 characters of page content: {page_source[:5000]}")
+                time.sleep(5)
+                logging.info("Cookies loaded and browser refreshed")
 
     def crawl(self, option):
         logging.info(f"Starting crawl with option {option}")
         self.load_cookies('cookies.json')
         
-        # if option == 1:
-        #     self.get_all_product_links()
-        # elif option == 2:
-        #     self.get_product_details_from_links()
-        # else:
-        #     logging.error("Invalid option provided.")
-        #     print("Invalid option provided.")
+        if option == 1:
+            self.get_all_product_links()
+        elif option == 2:
+            self.get_product_details_from_links()
+        else:
+            logging.error("Invalid option provided.")
+            print("Invalid option provided.")
 
     def get_all_product_links(self):
         logging.info("Getting all product links")
