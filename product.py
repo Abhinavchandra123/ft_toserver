@@ -32,6 +32,8 @@ class RCKongenCrawler:
         
         # self.driver = webdriver.Chrome(options=options)
         self.driver.set_window_size(1920, 1080)
+        window_rect = self.driver.get_window_rect()
+        print(f"Window size: Width={window_rect['width']}, Height={window_rect['height']}")
         self.wait = WebDriverWait(self.driver, 10)
         self.links = []
         self.nested_sub_links = []
