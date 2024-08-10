@@ -165,6 +165,7 @@ class RCKongenCrawler:
             time.sleep(5)
             # Extract product details
             product_title = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'h1.product-meta__title'))).text.strip()
+            logging.info(f"product_title: {product_title}")
             try:
                 parts = product_title.split(' - ')
                 if len(parts) >= 2:
