@@ -168,10 +168,13 @@ class RCKongenCrawler:
             try:
                 self.driver.get(link)
             except:
-                print('cant get link')
+                logging.info(f"error when getting link")
             time.sleep(5)
             # Extract product details
-            product_title = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'h1.product-meta__title'))).text.strip()
+            try:
+                product_title = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'h1.product-meta__title'))).text.strip()
+            except Exception as e:
+                logging.error(f"Error extracting product title {link}: {e}")
             logging.info(f"product_title: {product_title}")
             try:
                 parts = product_title.split(' - ')
