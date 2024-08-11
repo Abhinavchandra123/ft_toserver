@@ -69,28 +69,29 @@ class RCKongenCrawler:
 
     def get_product_details_from_links(self):
         logging.info("Getting product details from links")
+        
+        # Read product links from CSV
         product_links = self.read_product_links_from_csv('product_links.csv')
         processed_links = set()  # Set to keep track of processed links
-
+    
         for link in product_links:
             try:
-                try:
-                    self.extract_product_details(link)
-                except Exception as e:
-                    logging.error(f"Error extracting product details {link}: {e}")
+                self.extract_product_details(link)
                 processed_links.add(link)  # Add processed link to the set
-
-                # Write the remaining links back to the CSV, excluding processed links
-                with open('product_links.csv', mode='w', newline='') as file:
-                    fieldnames = ['Href']
-                    writer = csv.DictWriter(file, fieldnames=fieldnames)
-                    writer.writeheader()
-                    for remaining_link in product_links:
-                        if remaining_link not in processed_links:
-                            writer.writerow({'Href': remaining_link})
-
             except Exception as e:
-                logging.error(f"Error processing link {link}: {e}")
+                logging.error(f"Error extracting product details from {link}: {e}")
+        
+        # Write the remaining links back to the CSV, excluding processed links
+        try:
+            with open('product_links.csv', mode='w', newline='') as file:
+                fieldnames = ['Href']
+                writer = csv.DictWriter(file, fieldnames=fieldnames)
+                writer.writeheader()
+                for remaining_link in product_links:
+                    if remaining_link not in processed_links:
+                        writer.writerow({'Href': remaining_link})
+        except Exception as e:
+            logging.error(f"Error writing remaining links to CSV: {e}")
                 
     def crawl_pages(self):
         try:
