@@ -166,51 +166,63 @@ class RCKongenCrawler:
 
     def extract_product_details(self, link):
         logging.info(f"Extracting product details from {link}")
+        
         try:
-            try:
-                self.driver.get(link)
-            except:
-                logging.info(f"error when getting link")
-            time.sleep(5)
-            # Extract product details
+            self.driver.get(link)
+            time.sleep(5)  # Adjust this as necessary; consider using WebDriverWait for better reliability
+    
+            # Initialize variables
+            product_title = product_brand = product_price = product_stock = sku_name = 'N/A'
+            
             try:
                 product_title = self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, 'h1.product-meta__title'))).text.strip()
+                logging.info(f"Product title: {product_title}")
             except Exception as e:
-                logging.error(f"Error extracting product title {link}: {e}")
-            logging.info(f"product_title: {product_title}")
+                logging.error(f"Error extracting product title from {link}: {e}")
+    
             try:
                 parts = product_title.split(' - ')
                 if len(parts) >= 2:
                     sku_name = parts[1].strip()
-                    
-                else:
-                    sku_name = 'N/A'
-            except:
-                sku_name = 'N/A'
-            product_brand = self.driver.find_element(By.CSS_SELECTOR, 'a.product-meta__vendor').text.strip()
-            product_price_element = self.driver.find_element(By.CSS_SELECTOR, 'span.price')
-            product_stock = self.driver.find_element(By.CSS_SELECTOR, 'div.product-form__info-item span.inventory').text.strip()
-            product_price = product_price_element.text.strip().replace('\n', ' ')
+            except Exception as e:
+                logging.error(f"Error parsing SKU name from product title {product_title}: {e}")
             
-            if product_stock == 'In stock':
-                product_stock_status = 'Yes'
-            else:
-                product_stock_status = "No"
+            try:
+                product_brand = self.driver.find_element(By.CSS_SELECTOR, 'a.product-meta__vendor').text.strip()
+            except Exception as e:
+                logging.error(f"Error extracting product brand from {link}: {e}")
+            
+            try:
+                product_price_element = self.driver.find_element(By.CSS_SELECTOR, 'span.price')
+                product_price = product_price_element.text.strip().replace('\n', ' ')
+            except Exception as e:
+                logging.error(f"Error extracting product price from {link}: {e}")
+            
+            try:
+                product_stock = self.driver.find_element(By.CSS_SELECTOR, 'div.product-form__info-item span.inventory').text.strip()
+            except Exception as e:
+                logging.error(f"Error extracting product stock from {link}: {e}")
+            
+            product_stock_status = 'Yes' if product_stock == 'In stock' else 'No'
+            
             data = {
-                    'Product Title': product_title,
-                    'Product Brand': product_brand,
-                    'SKU Name': sku_name,
-                    'Product Price': product_price,
-                    'Product Stock': product_stock,
-                    'Product Stock Status': product_stock_status,
-                    'Product Link': link
-                }
-
+                'Product Title': product_title,
+                'Product Brand': product_brand,
+                'SKU Name': sku_name,
+                'Product Price': product_price,
+                'Product Stock': product_stock,
+                'Product Stock Status': product_stock_status,
+                'Product Link': link
+            }
+    
             # Save data to CSV file
             self.product_detail_save_to_csv(data, 'product_details.csv')
             
         except NoSuchElementException as e:
             logging.error(f"Error extracting product details from {link}: {e}")
+            self.save_error_to_csv(link, str(e))
+        except Exception as e:
+            logging.error(f"Unexpected error occurred while processing {link}: {e}")
             self.save_error_to_csv(link, str(e))
             
     def save_error_to_csv(self, link, error_message):
