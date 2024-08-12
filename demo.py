@@ -5,7 +5,6 @@ from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 import json
 import time
-from selenium.webdriver.common.by import By
 
 # Start a virtual display
 display = Display(visible=0, size=(800, 600))
@@ -37,11 +36,14 @@ with open('cookies.json', 'r') as file:
 driver.refresh()
 time.sleep(5)
 
-# Find the heading element by its class name using the latest Selenium method
-heading_element = driver.find_element(By.CSS_SELECTOR, 'h2.heading.h1')
+# Get the page source
+page_source = driver.page_source
 
-# Print the text of the heading element
-print(heading_element.text)
+# Write the page source to website.html
+with open('website.html', 'w', encoding='utf-8') as file:
+    file.write(page_source)
+
+print("The page has been saved to 'website.html'.")
 
 # Quit the WebDriver
 driver.quit()
