@@ -118,7 +118,7 @@ class MorfarsScraper:
 if __name__ == "__main__":
     scraper = MorfarsScraper()
     
-    url = 'https://rcklubben.dk/collections/all'
+    url = 'https://rcklubben.dk/collections/rc-biler'
     product_urls = "rcklubben_product_urls.csv"
     product_details = "rcklubben_product_details.csv"
     
