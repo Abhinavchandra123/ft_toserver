@@ -3,8 +3,9 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import json
-import time
 
 options = Options()
 options.add_argument('--headless')
@@ -20,7 +21,7 @@ driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), opti
 driver.get("https://rckongen.dk/en/")
 
 # Wait for the page to load properly
-time.sleep(5)
+WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'h2.heading.h1')))
 
 # Load and add cookies
 with open('cookies.json', 'r') as file:
@@ -30,7 +31,7 @@ with open('cookies.json', 'r') as file:
 
 # Refresh the page to apply the cookies
 driver.refresh()
-time.sleep(5)
+WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'h2.heading.h1')))
 
 # Find the heading element by its class name using the latest Selenium method
 heading_element = driver.find_element(By.CSS_SELECTOR, 'h2.heading.h1')
