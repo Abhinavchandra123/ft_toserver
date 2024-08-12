@@ -31,9 +31,11 @@ with open('cookies.json', 'r') as file:
 driver.refresh()
 time.sleep(5)
 
-# Print page title and source
-print(driver.title)
-print(driver.page_source)
+# Find the heading element by its class name
+heading_element = driver.find_element_by_css_selector('h2.heading.h1')
+
+# Print the text of the heading element
+print(heading_element.text)
 
 # Quit the WebDriver
 driver.quit()
