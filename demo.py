@@ -1,10 +1,14 @@
+from pyvirtualdisplay import Display
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
-from bs4 import BeautifulSoup
 import json
 import time
+
+# Start a virtual display
+display = Display(visible=0, size=(800, 600))
+display.start()
 
 options = Options()
 options.add_argument('--headless')
@@ -32,18 +36,14 @@ with open('cookies.json', 'r') as file:
 driver.refresh()
 time.sleep(5)
 
-# Get the page source and parse it with Beautiful Soup
-page_source = driver.page_source
-soup = BeautifulSoup(page_source, 'lxml')
-
-# Find the heading element
-heading_element = soup.select_one('h2.heading.h1')
+# Find the heading element by its class name using the latest Selenium method
+heading_element = driver.find_element(By.CSS_SELECTOR, 'h2.heading.h1')
 
 # Print the text of the heading element
-if heading_element:
-    print(heading_element.text)
-else:
-    print("Element not found")
+print(heading_element.text)
 
 # Quit the WebDriver
 driver.quit()
+
+# Stop the virtual display
+display.stop()
