@@ -5,6 +5,7 @@ from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
 import json
 import time
+from selenium.webdriver.common.by import By
 
 # Start a virtual display
 display = Display(visible=0, size=(800, 600))
