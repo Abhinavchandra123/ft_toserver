@@ -2,6 +2,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.common.by import By
 import json
 import time
 
@@ -31,8 +32,8 @@ with open('cookies.json', 'r') as file:
 driver.refresh()
 time.sleep(5)
 
-# Find the heading element by its class name
-heading_element = driver.find_element_by_css_selector('h2.heading.h1')
+# Find the heading element by its class name using the latest Selenium method
+heading_element = driver.find_element(By.CSS_SELECTOR, 'h2.heading.h1')
 
 # Print the text of the heading element
 print(heading_element.text)
