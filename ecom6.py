@@ -13,10 +13,10 @@ class ModelSportScraper:
     def __init__(self):
         options = Options()
         # ****************** Use this for server hosting ***********************
-        # options.add_argument("--headless") 
-        # options.add_argument("--disable-gpu")
-        # options.add_argument("--no-sandbox")
-        # options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--headless") 
+        options.add_argument("--disable-gpu")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
         # **********************************************************************
         
         self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()),options=options)
@@ -24,7 +24,7 @@ class ModelSportScraper:
         
         self.driver.get("https://modelsport.dk/")
         time.sleep(4)
-        self.save_cookies("modelsport_cookies.json") #use when needed to refresh cookies or when cookies file missing
+        # self.save_cookies("modelsport_cookies.json") #use when needed to refresh cookies or when cookies file missing
         self.load_cookies("modelsport_cookies.json")
         self.driver.refresh()
 
